@@ -17,6 +17,22 @@ public class SlotSymbolId implements Serializable {
         this.symbol = symbol;
     }
 
+    public Long getSlot() {
+        return slot;
+    }
+
+    public void setSlot(Long slot) {
+        this.slot = slot;
+    }
+
+    public Long getSymbol() {
+        return symbol;
+    }
+
+    public void setSymbol(Long symbol) {
+        this.symbol = symbol;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

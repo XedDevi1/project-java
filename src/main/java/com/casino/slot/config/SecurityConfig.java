@@ -54,9 +54,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(daoAuthenticationProvider())
-                .formLogin(form -> form.disable())          // без HTML формы
-                .httpBasic(httpBasic -> httpBasic.disable()); // без Basic Auth;
-        // авторизация будет через наш /api/auth/login и сессии в БД
+                .formLogin(form -> form.disable())
+                .httpBasic(httpBasic -> httpBasic.disable());
 
         return http.build();
     }

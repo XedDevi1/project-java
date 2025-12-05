@@ -6,8 +6,8 @@ import com.casino.slot.entity.User;
 import com.casino.slot.repository.RoleRepository;
 import com.casino.slot.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import jakarta.validation.constraints.NotBlank;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +23,6 @@ import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationManager authManager;
@@ -31,7 +30,15 @@ public class AuthController {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
-    // DTOшки прямо как вложенные классы ради простоты
+    public AuthController(AuthenticationManager authManager,
+                          UserRepository userRepository,
+                          RoleRepository roleRepository,
+                          PasswordEncoder passwordEncoder) {
+        this.authManager = authManager;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     public record RegisterRequest(
             @NotBlank String username,
@@ -84,7 +91,6 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        // ВАЖНО: положить контекст в HTTP-сессию → Spring Session сохранит его в БД
         httpRequest.getSession(true)
                 .setAttribute("SPRING_SECURITY_CONTEXT", context);
 
@@ -92,5 +98,18 @@ public class AuthController {
                 .orElseThrow();
 
         return ResponseEntity.ok(new AuthResponse(user.getUsername(), user.getBalance()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+
+        if (session != null) {
+            session.invalidate();
+        }
+
+        SecurityContextHolder.clearContext();
+
+        return ResponseEntity.ok().build();
     }
 }

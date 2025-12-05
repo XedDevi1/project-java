@@ -3,7 +3,6 @@ package com.casino.slot.service;
 import com.casino.slot.entity.*;
 import com.casino.slot.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,7 +14,6 @@ import java.util.List;
 import java.util.Set;
 
 @Configuration
-@RequiredArgsConstructor
 public class DataInitializer {
 
     private final RoleRepository roleRepository;
@@ -28,6 +26,26 @@ public class DataInitializer {
     private final ReelStripRepository reelStripRepository;
     private final PasswordEncoder passwordEncoder;
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public DataInitializer(RoleRepository roleRepository,
+                           UserRepository userRepository,
+                           SlotRepository slotRepository,
+                           SymbolRepository symbolRepository,
+                           SlotSymbolRepository slotSymbolRepository,
+                           PaylineRepository paylineRepository,
+                           PayoutRepository payoutRepository,
+                           ReelStripRepository reelStripRepository,
+                           PasswordEncoder passwordEncoder) {
+        this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.slotRepository = slotRepository;
+        this.symbolRepository = symbolRepository;
+        this.slotSymbolRepository = slotSymbolRepository;
+        this.paylineRepository = paylineRepository;
+        this.payoutRepository = payoutRepository;
+        this.reelStripRepository = reelStripRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Bean
     public CommandLineRunner initData() {
@@ -50,7 +68,6 @@ public class DataInitializer {
                     return roleRepository.save(r);
                 });
 
-        // --- Игрок player/player ---
         if (userRepository.findByUsername("player").isEmpty()) {
             User player = new User();
             player.setUsername("player");
@@ -60,25 +77,22 @@ public class DataInitializer {
             userRepository.save(player);
         }
 
-        // если слоты уже есть — ничего не делаем
         if (slotRepository.count() > 0) {
             return;
         }
 
-        // --- Общие символы ---
         Symbol cherry = symbolRepository.save(newSymbol("Cherry", "🍒", 1));
         Symbol lemon  = symbolRepository.save(newSymbol("Lemon", "🍋", 2));
         Symbol seven  = symbolRepository.save(newSymbol("Seven", "7️⃣", 3));
         Symbol wild   = symbolRepository.save(newSymbol("Wild", "⭐", 10));
 
-        // Три слота
-        createSimpleSlot("Fruit Cocktail", "Классический фруктовый слот",
+        createSimpleSlot("Fruit Cocktail", "Klasyczny automat owocowy",
                 cherry, lemon, seven, wild);
 
-        createSimpleSlot("Book of Ra", "Пародия на книжный слот",
+        createSimpleSlot("Book of Ra", "Parodia slotu na książki",
                 cherry, lemon, seven, wild);
 
-        createSimpleSlot("Lucky Sevens", "Слот с акцентом на семёрках",
+        createSimpleSlot("Lucky Sevens", "Automat z naciskiem na siódemki",
                 cherry, lemon, seven, wild);
     }
 
@@ -106,25 +120,21 @@ public class DataInitializer {
         slot.setRtp(96.5);
         slot = slotRepository.save(slot);
 
-        // slot_symbols с весами
         saveSlotSymbol(slot, cherry, 40);
         saveSlotSymbol(slot, lemon, 40);
         saveSlotSymbol(slot, seven, 15);
         saveSlotSymbol(slot, wild, 5);
 
-        // reel_strips просто для заполнения 10-й таблицы, логика пока не использует
         ReelStrip strip0 = new ReelStrip();
         strip0.setSlot(slot);
         strip0.setReelNumber(0);
         strip0.setSymbolsSequence("Cherry,Lemon,Seven,Wild,Cherry,Lemon");
         reelStripRepository.save(strip0);
 
-        // три горизонтальные линии
-        createHorizontalPayline(slot, 0, "Верхняя линия");
-        createHorizontalPayline(slot, 1, "Средняя линия");
-        createHorizontalPayline(slot, 2, "Нижняя линия");
+        createHorizontalPayline(slot, 0, "Górna linia");
+        createHorizontalPayline(slot, 1, "Linia środkowa");
+        createHorizontalPayline(slot, 2, "Dolna linia");
 
-        // payouts: для простоты – для символов cherry/lemon/seven
         savePayout(slot, cherry, 3, new BigDecimal("5"));
         savePayout(slot, cherry, 4, new BigDecimal("10"));
         savePayout(slot, cherry, 5, new BigDecimal("20"));
@@ -136,8 +146,6 @@ public class DataInitializer {
         savePayout(slot, seven, 3, new BigDecimal("10"));
         savePayout(slot, seven, 4, new BigDecimal("25"));
         savePayout(slot, seven, 5, new BigDecimal("50"));
-
-        // wild можно использовать отдельно позже
     }
 
     private void saveSlotSymbol(Slot slot, Symbol symbol, int weight) {
@@ -151,7 +159,6 @@ public class DataInitializer {
     private void createHorizontalPayline(Slot slot, int rowIndex, String description) throws Exception {
         int cols = slot.getColumns();
 
-        // positions: [[0,row],[1,row],...]
         List<List<Integer>> positions = java.util.stream.IntStream.range(0, cols)
                 .mapToObj(col -> List.of(col, rowIndex))
                 .toList();
