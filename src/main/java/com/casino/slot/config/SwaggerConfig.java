@@ -13,7 +13,7 @@ public class SwaggerConfig {
         return new OpenAPI()
                 .info(new Info()
                         .title("Slot Casino API")
-                        .description("REST API для Slot Casino")
+                        .description("REST API dla Slot Casino")
                         .version("1.0.0"));
     }
 }

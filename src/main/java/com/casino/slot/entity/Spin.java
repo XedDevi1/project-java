@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Objects;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "spins")
@@ -25,10 +27,12 @@ public class Spin {
 
     private LocalDateTime timestamp = LocalDateTime.now();
 
-    @Column(columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "JSONB")
     private String resultGrid;
 
-    @Column(columnDefinition = "JSON")
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(columnDefinition = "JSONB")
     private String winningLines;
 
     public Spin() {}

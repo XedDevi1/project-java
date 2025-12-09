@@ -8,6 +8,6 @@ public class TestController {
 
     @GetMapping("/api/hello")
     public String hello() {
-        return "Slot Casino API is working!";
+        return "API Slot Casino działa!";
     }
 }

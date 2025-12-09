@@ -18,7 +18,8 @@ public class BalanceService {
 
     public BigDecimal getBalance(String username) {
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("Nie znaleziono użytkownika: " + username));
+
         return user.getBalance();
     }
 }

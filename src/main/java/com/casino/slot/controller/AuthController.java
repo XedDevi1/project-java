@@ -15,8 +15,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.Set;
@@ -40,20 +44,9 @@ public class AuthController {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public record RegisterRequest(
-            @NotBlank String username,
-            @NotBlank String password
-    ) {}
-
-    public record AuthRequest(
-            @NotBlank String username,
-            @NotBlank String password
-    ) {}
-
-    public record AuthResponse(
-            String username,
-            BigDecimal balance
-    ) {}
+    public record RegisterRequest(@NotBlank String username, @NotBlank String password) {}
+    public record AuthRequest(@NotBlank String username, @NotBlank String password) {}
+    public record AuthResponse(String username, BigDecimal balance) {}
 
     @PostMapping("/register")
     @Transactional
@@ -63,7 +56,7 @@ public class AuthController {
         }
 
         Role userRole = roleRepository.findByName(RoleName.USER)
-                .orElseThrow(() -> new IllegalStateException("Role USER not found"));
+                .orElseThrow(() -> new IllegalStateException("Nie znaleziono roli USER"));
 
         User user = new User();
         user.setUsername(request.username());
@@ -77,25 +70,19 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request,
-                                              HttpServletRequest httpRequest) {
-
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest request, HttpServletRequest httpRequest) {
         Authentication authentication = authManager.authenticate(
-                new UsernamePasswordAuthenticationToken(
-                        request.username(),
-                        request.password()
-                )
+                new UsernamePasswordAuthenticationToken(request.username(), request.password())
         );
 
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
 
-        httpRequest.getSession(true)
-                .setAttribute("SPRING_SECURITY_CONTEXT", context);
+        HttpSession session = httpRequest.getSession(true);
+        session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, context);
 
-        User user = userRepository.findByUsername(request.username())
-                .orElseThrow();
+        User user = userRepository.findByUsername(request.username()).orElseThrow();
 
         return ResponseEntity.ok(new AuthResponse(user.getUsername(), user.getBalance()));
     }
@@ -103,13 +90,10 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest request) {
         HttpSession session = request.getSession(false);
-
         if (session != null) {
             session.invalidate();
         }
-
         SecurityContextHolder.clearContext();
-
         return ResponseEntity.ok().build();
     }
 }

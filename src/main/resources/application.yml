@@ -2,19 +2,18 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/slot_casino
     username: postgres
-    password: 1235769qa9        # ← поменяй на свой настоящий пароль!
+    password: 1235769qa9
     driver-class-name: org.postgresql.Driver
 
   jpa:
     hibernate:
-      ddl-auto: update        # пока так — таблицы создадутся сами
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  # Сессии будут храниться в БД (важно для REST + form-login)
   session:
     store-type: jdbc
     jdbc:
@@ -28,15 +27,10 @@ server:
       timeout: 60m
       cookie:
         http-only: true
-        secure: false       # пока http, потом можно true при https
+        secure: false
 
-# Логи, чтобы видеть SQL-запросы
 logging:
   level:
-    org:
-      hibernate:
-        SQL: DEBUG
-        type:
-          descriptor:
-            sql: TRACE
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
     org.springframework.security: DEBUG

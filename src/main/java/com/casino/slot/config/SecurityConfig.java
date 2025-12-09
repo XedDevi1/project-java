@@ -8,6 +8,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -18,7 +19,7 @@ public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
 
-    public  SecurityConfig(UserDetailsServiceImpl userDetailsService) {
+    public SecurityConfig(UserDetailsServiceImpl userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
@@ -28,7 +29,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider daoAuthenticationProvider() {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         provider.setUserDetailsService(userDetailsService);
         provider.setPasswordEncoder(passwordEncoder());
@@ -36,16 +37,16 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
-            AuthenticationConfiguration configuration) throws Exception {
-        return configuration.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(AbstractHttpConfigurer::disable)
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                 "/api/auth/**",
@@ -55,9 +56,7 @@ public class SecurityConfig {
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
-                .authenticationProvider(daoAuthenticationProvider())
-                .formLogin(form -> form.disable())
-                .httpBasic(httpBasic -> httpBasic.disable());
+                .authenticationProvider(authenticationProvider());
 
         return http.build();
     }
