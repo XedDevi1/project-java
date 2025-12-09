@@ -16,9 +16,6 @@ public class BalanceService {
         this.userRepository = userRepository;
     }
 
-    /**
-     * Returns User's balance
-     */
     public BigDecimal getBalance(String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
